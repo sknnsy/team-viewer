@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if is_edit %}Редактировать{% else %}Новый{% endif %} проект — Team Finder{% endblock %}
+
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="form-card form-card-wide">
+            <h1>{% if is_edit %}Редактировать проект{% else %}Новый проект{% endif %}</h1>
+            <p class="form-subtitle">
+                {% if is_edit %}
+                    Внесите изменения и сохраните.
+                {% else %}
+                    Опубликуйте идею — и найдите единомышленников.
+                {% endif %}
+            </p>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <ul class="form-errors">
+                        {% for err in form.non_field_errors %}<li>{{ err }}</li>{% endfor %}
+                    </ul>
+                {% endif %}
+
+                {% for field in form %}
+                <div class="form-field">
+                    <label for="{{ field.id_for_label }}">
+                        {{ field.label }}{% if field.field.required %} <span style="color: var(--wine);">*</span>{% endif %}
+                    </label>
+                    {{ field }}
+                    {% if field.help_text %}<div class="form-help">{{ field.help_text|safe }}</div>{% endif %}
+                    {% if field.errors %}
+                        <ul class="form-errors">
+                            {% for err in field.errors %}<li>{{ err }}</li>{% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                {% if is_edit %}
+                <div class="form-help">
+                    Чтобы управлять необходимыми навыками проекта,
+                    откройте <a href="{% url 'projects:project_detail' pk=project.pk %}">страницу проекта</a>.
+                </div>
+                {% endif %}
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        {% if is_edit %}Сохранить изменения{% else %}Опубликовать{% endif %}
+                    </button>
+                    {% if is_edit %}
+                        <a href="{% url 'projects:project_detail' pk=project.pk %}" class="btn btn-secondary">Отмена</a>
+                    {% else %}
+                        <a href="{% url 'projects:project_list' %}" class="btn btn-secondary">Отмена</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

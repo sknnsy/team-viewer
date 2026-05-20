@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ project.title }} — Team Finder{% endblock %}
+
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="detail-layout">
+            <div class="detail-main">
+                <div class="page-meta">{{ project.created_at|date:"d M Y" }} · #{{ project.pk }}</div>
+                <h1>{{ project.title }}</h1>
+
+                <div class="detail-meta">
+                    <a href="{% url 'users:user_detail' username=project.author.username %}" class="detail-meta-author">
+                        {% if project.author.avatar %}
+                            <img src="{{ project.author.avatar.url }}" alt="" class="avatar avatar-sm">
+                        {% else %}
+                            <span class="avatar avatar-sm avatar-placeholder">{{ project.author.first_name|slice:":1" }}{{ project.author.last_name|slice:":1" }}</span>
+                        {% endif %}
+                        <span>{{ project.author.first_name }} {{ project.author.last_name }}</span>
+                    </a>
+                    <span class="detail-status-badge status-{{ project.status }}">
+                        {{ project.get_status_display }}
+                    </span>
+                </div>
+
+                {% if project.description %}
+                <div class="detail-description">{{ project.description }}</div>
+                {% endif %}
+
+                <!-- Необходимые навыки -->
+                <div class="detail-section">
+                    <div class="detail-section-title">Необходимые навыки</div>
+                    {% if is_owner %}
+                        <div class="skills-block"
+                             data-skill-manager
+                             data-project-id="{{ project.pk }}"
+                             data-autocomplete-url="{% url 'skills:autocomplete' %}"
+                             data-add-url="{% url 'skills:project_skill_add' project_id=project.pk %}"
+                             data-remove-url-template="{% url 'skills:project_skill_remove' project_id=project.pk skill_id=0 %}">
+                            <div class="skills-list" data-skill-list>
+                                {% for skill in project.skills.all %}
+                                    <span class="skill-tag" data-skill-id="{{ skill.id }}" data-skill-name="{{ skill.name }}">
+                                        {{ skill.name }}
+                                        <button type="button" class="skill-tag-remove"
+                                                data-remove-skill="{{ skill.id }}"
+                                                aria-label="Удалить">×</button>
+                                    </span>
+                                {% empty %}
+                                    <span class="skill-empty" style="color: var(--muted); font-size: 0.9rem;">
+                                        Навыков пока нет.
+                                    </span>
+                                {% endfor %}
+                            </div>
+                            <div class="skill-add-form">
+                                <input type="text"
+                                       data-skill-input
+                                       placeholder="Введите навык — Python, Figma…"
+                                       autocomplete="off">
+                                <button type="button" class="btn btn-secondary btn-sm" data-add-btn>Добавить</button>
+                                <div class="autocomplete-results" data-autocomplete></div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="skills-list">
+                            {% for skill in project.skills.all %}
+                                <a href="{% url 'projects:project_list' %}?skill={{ skill.slug }}" class="skill-tag">
+                                    {{ skill.name }}
+                                </a>
+                            {% empty %}
+                                <span style="color: var(--muted); font-size: 0.9rem;">
+                                    Автор пока не указал требуемые навыки.
+                                </span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if is_owner and project.members.all %}
+                <div class="detail-section">
+                    <div class="detail-section-title">Участники ({{ project.members.count }})</div>
+                    <div>
+                        {% for member in project.members.all %}
+                        <div class="member-row">
+                            {% if member.avatar %}
+                                <img src="{{ member.avatar.url }}" alt="" class="avatar avatar-sm">
+                            {% else %}
+                                <span class="avatar avatar-sm avatar-placeholder">{{ member.first_name|slice:":1" }}{{ member.last_name|slice:":1" }}</span>
+                            {% endif %}
+                            <div>
+                                <a href="{% url 'users:user_detail' username=member.username %}">
+                                    {{ member.first_name }} {{ member.last_name }}
+                                </a>
+                                <div style="color: var(--muted); font-size: 0.85rem;">{{ member.email }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <aside class="detail-sidebar">
+                {% if is_owner %}
+                    <a href="{% url 'projects:project_edit' pk=project.pk %}" class="btn btn-secondary">Редактировать проект</a>
+                    {% if not project.is_finished %}
+                    <form method="post" action="{% url 'projects:project_finish' pk=project.pk %}" style="margin:0;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger" style="width:100%;"
+                                onclick="return confirm('Завершить проект? Действие можно отменить только через админку.')">
+                            Завершить проект
+                        </button>
+                    </form>
+                    {% endif %}
+                {% elif user.is_authenticated %}
+                    {% if is_member %}
+                        <span class="btn btn-secondary" style="cursor:default;">Вы участник</span>
+                    {% elif project.is_finished %}
+                        <span class="btn btn-secondary" style="cursor:default; opacity:0.6;">Проект завершён</span>
+                    {% else %}
+                        <form method="post" action="{% url 'projects:project_join' pk=project.pk %}" style="margin:0;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary" style="width:100%;">
+                                Присоединиться
+                            </button>
+                        </form>
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'users:login' %}?next={{ request.path }}" class="btn btn-primary">
+                        Войти, чтобы присоединиться
+                    </a>
+                {% endif %}
+
+                <div style="border-top: 1px dashed var(--line); margin: 6px 0; padding-top: 14px;">
+                    <div class="detail-section-title" style="margin-bottom: 8px;">Поделиться ссылкой</div>
+                    <div class="share-block">
+                        <input type="text" id="share-link-input"
+                               value="{{ request.scheme }}://{{ request.get_host }}{% url 'projects:project_detail' pk=project.pk %}"
+                               readonly>
+                        <button class="copy-btn" data-copy-target="#share-link-input">Копировать</button>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{% load static %}
+<script src="{% static 'js/app.js' %}"></script>
+{% endblock %}

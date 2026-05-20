@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Вход — Team Finder{% endblock %}
+
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="form-card">
+            <h1>С возвращением</h1>
+            <p class="form-subtitle">Войдите, чтобы продолжить искать команду.</p>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <ul class="form-errors">
+                        {% for err in form.non_field_errors %}<li>{{ err }}</li>{% endfor %}
+                    </ul>
+                {% endif %}
+
+                <div class="form-field">
+                    <label for="{{ form.username.id_for_label }}">Email</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        <ul class="form-errors">
+                            {% for err in form.username.errors %}<li>{{ err }}</li>{% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <label for="{{ form.password.id_for_label }}">Пароль</label>
+                    {{ form.password }}
+                    {% if form.password.errors %}
+                        <ul class="form-errors">
+                            {% for err in form.password.errors %}<li>{{ err }}</li>{% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Войти</button>
+                </div>
+            </form>
+
+            <div class="form-meta">
+                Ещё нет аккаунта?
+                <a href="{% url 'users:register' %}">Зарегистрироваться</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Team Finder{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="{% url 'projects:project_list' %}" class="logo">
+                <span class="logo-mark">◆</span>
+                <span class="logo-text">team<span class="logo-accent">finder</span></span>
+            </a>
+            <nav class="main-nav">
+                <a href="{% url 'projects:project_list' %}" class="nav-link">Проекты</a>
+                <a href="{% url 'users:user_list' %}" class="nav-link">Люди</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'projects:project_create' %}" class="btn btn-primary btn-sm">＋ Создать проект</a>
+                    <div class="user-menu">
+                        <a href="{% url 'users:user_detail' username=user.username %}" class="user-menu-trigger">
+                            {% if user.avatar %}
+                                <img src="{{ user.avatar.url }}" alt="" class="avatar avatar-sm">
+                            {% else %}
+                                <span class="avatar avatar-sm avatar-placeholder">{{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}</span>
+                            {% endif %}
+                            <span class="user-menu-name">{{ user.first_name }}</span>
+                        </a>
+                        <div class="user-menu-dropdown">
+                            <a href="{% url 'users:user_detail' username=user.username %}">Мой профиль</a>
+                            <a href="{% url 'users:user_edit' %}">Редактировать профиль</a>
+                            <a href="{% url 'users:password_change' %}">Сменить пароль</a>
+                            {% if user.is_staff %}<a href="{% url 'admin:index' %}">Админка</a>{% endif %}
+                            <form action="{% url 'users:logout' %}" method="post" class="logout-form">
+                                {% csrf_token %}
+                                <button type="submit">Выйти</button>
+                            </form>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{% url 'users:login' %}" class="nav-link">Войти</a>
+                    <a href="{% url 'users:register' %}" class="btn btn-primary btn-sm">Регистрация</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    {% if messages %}
+    <div class="container messages-wrap">
+        {% for message in messages %}
+        <div class="message message-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <main class="site-main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <div>© {% now "Y" %} Team Finder. Учебный проект Яндекс Практикума.</div>
+            <div class="footer-meta">сделано с командным духом</div>
+        </div>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

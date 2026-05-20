@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Регистрация — Team Finder{% endblock %}
+
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="form-card">
+            <h1>Создать аккаунт</h1>
+            <p class="form-subtitle">Найдите команду или соберите свою.</p>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <ul class="form-errors">
+                        {% for err in form.non_field_errors %}<li>{{ err }}</li>{% endfor %}
+                    </ul>
+                {% endif %}
+
+                {% for field in form %}
+                <div class="form-field">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <div class="form-help">{{ field.help_text|safe }}</div>
+                    {% endif %}
+                    {% if field.errors %}
+                        <ul class="form-errors">
+                            {% for err in field.errors %}<li>{{ err }}</li>{% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+                </div>
+            </form>
+
+            <div class="form-meta">
+                Уже есть аккаунт?
+                <a href="{% url 'users:login' %}">Войти</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

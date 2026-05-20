@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Люди — Team Finder{% endblock %}
+
+{% block content %}
+<section class="page-section">
+    <div class="container">
+
+        <div class="page-header">
+            <div>
+                <div class="page-meta">{{ page_obj.paginator.count }} участник{{ page_obj.paginator.count|pluralize:",а,ов" }}</div>
+                <h1>Все участники</h1>
+            </div>
+        </div>
+
+        {% if page_obj.object_list %}
+        <div class="cards-grid">
+            {% for u in page_obj.object_list %}
+            <article class="user-card" data-user-card>
+                {% if u.avatar %}
+                    <img src="{{ u.avatar.url }}" alt="" class="avatar avatar-lg">
+                {% else %}
+                    <span class="avatar avatar-lg avatar-placeholder">{{ u.first_name|slice:":1" }}{{ u.last_name|slice:":1" }}</span>
+                {% endif %}
+                <div class="user-card-name">
+                    <a href="{% url 'users:user_detail' username=u.username %}">
+                        {{ u.first_name }} {{ u.last_name }}
+                    </a>
+                </div>
+                <a href="{% url 'users:user_detail' username=u.username %}" class="btn btn-outline btn-sm">
+                    Посмотреть контакты
+                </a>
+            </article>
+            {% endfor %}
+        </div>
+
+        {% include 'includes/pagination.html' with page_obj=page_obj %}
+
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">∅</div>
+            <p class="empty-state-text">Пока нет ни одного зарегистрированного пользователя.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

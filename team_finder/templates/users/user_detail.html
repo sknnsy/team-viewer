@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ profile_user.first_name }} {{ profile_user.last_name }} — Team Finder{% endblock %}
+
+{% block content %}
+<section class="page-section">
+    <div class="container">
+
+        <div class="profile-header">
+            {% if profile_user.avatar %}
+                <img src="{{ profile_user.avatar.url }}" alt="" class="avatar avatar-lg">
+            {% else %}
+                <span class="avatar avatar-lg avatar-placeholder">
+                    {{ profile_user.first_name|slice:":1" }}{{ profile_user.last_name|slice:":1" }}
+                </span>
+            {% endif %}
+
+            <div>
+                <div class="page-meta">в Team Finder с {{ profile_user.date_joined|date:"F Y" }}</div>
+                <div class="profile-name">{{ profile_user.first_name }} {{ profile_user.last_name }}</div>
+                {% if profile_user.bio %}
+                    <div class="profile-bio">{{ profile_user.bio }}</div>
+                {% endif %}
+                <div class="profile-contacts">
+                    <div><span>email:</span> <a href="mailto:{{ profile_user.email }}">{{ profile_user.email }}</a></div>
+                    {% if profile_user.phone %}
+                        <div><span>тел:</span> {{ profile_user.phone }}</div>
+                    {% endif %}
+                    {% if profile_user.github %}
+                        <div><span>github:</span>
+                            <a href="https://github.com/{{ profile_user.github }}" target="_blank" rel="noopener">
+                                {{ profile_user.github }}
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="profile-actions">
+                {% if user == profile_user %}
+                    <a href="{% url 'users:user_edit' %}" class="btn btn-secondary">Редактировать профиль</a>
+                    <a href="{% url 'projects:project_create' %}" class="btn btn-primary">＋ Добавить проект</a>
+                {% endif %}
+                <button class="btn btn-outline copy-btn"
+                        data-copy-target=""
+                        data-copy-text="{{ request.scheme }}://{{ request.get_host }}{% url 'users:user_detail' username=profile_user.username %}">
+                    Поделиться профилем
+                </button>
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <div class="detail-section-title">
+                Проекты пользователя ({{ projects|length }})
+            </div>
+            {% if projects %}
+                <div class="cards-grid">
+                    {% for project in projects %}
+                    <article class="project-card">
+                        <div class="project-card-header">
+                            <span class="project-card-status status-{{ project.status }}">
+                                {{ project.get_status_display }}
+                            </span>
+                            <span class="project-card-date">{{ project.created_at|date:"d.m.Y" }}</span>
+                        </div>
+                        <h3>
+                            <a href="{% url 'projects:project_detail' pk=project.pk %}">{{ project.title }}</a>
+                        </h3>
+                        <p class="project-card-desc">{{ project.short_description }}</p>
+                        {% if project.skills.all %}
+                        <div class="project-card-skills">
+                            {% for skill in project.skills.all|slice:":4" %}
+                                <span class="skill-tag">{{ skill.name }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <p class="empty-state-text">У этого пользователя пока нет проектов.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{% load static %}
+<script src="{% static 'js/app.js' %}"></script>
+{% endblock %}

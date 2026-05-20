@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Проекты — Team Finder{% endblock %}
+
+{% block content %}
+<section class="page-section">
+    <div class="container">
+
+        <div class="page-header">
+            <div>
+                <div class="page-meta">{{ page_obj.paginator.count }} проект{{ page_obj.paginator.count|pluralize:"_,а,ов" }}</div>
+                <h1>{% if selected_skill %}Проекты с навыком <em>{{ selected_skill.name }}</em>{% else %}Все проекты{% endif %}</h1>
+            </div>
+            {% if user.is_authenticated %}
+                <a href="{% url 'projects:project_create' %}" class="btn btn-primary">＋ Создать проект</a>
+            {% endif %}
+        </div>
+
+        {% if all_skills %}
+        <div class="filter-panel">
+            <div class="filter-panel-header">
+                <div class="filter-panel-title">Фильтр по навыкам</div>
+                {% if selected_skill or skill_param %}
+                    <a href="{% url 'projects:project_list' %}" class="filter-panel-reset">× Сбросить фильтр</a>
+                {% endif %}
+            </div>
+            <div class="filter-panel-skills">
+                {% for skill in all_skills %}
+                    <a href="?skill={{ skill.slug }}"
+                       class="skill-tag {% if selected_skill and selected_skill.id == skill.id %}active{% endif %}">
+                        {{ skill.name }}
+                    </a>
+                {% endfor %}
+            </div>
+            {% if selected_skill %}
+                <div class="filter-panel-active-info">
+                    Показаны проекты с навыком <strong>{{ selected_skill.name }}</strong>.
+                </div>
+            {% elif skill_param and not selected_skill %}
+                <div class="filter-panel-active-info">
+                    Навык <strong>«{{ skill_param }}»</strong> не найден.
+                </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if page_obj.object_list %}
+        <div class="cards-grid">
+            {% for project in page_obj.object_list %}
+            <article class="project-card">
+                <div class="project-card-header">
+                    <span class="project-card-status status-{{ project.status }}">
+                        {{ project.get_status_display }}
+                    </span>
+                    <span class="project-card-date">{{ project.created_at|date:"d.m.Y" }}</span>
+                </div>
+                <h3>
+                    <a href="{% url 'projects:project_detail' pk=project.pk %}">{{ project.title }}</a>
+                </h3>
+                <p class="project-card-desc">{{ project.short_description }}</p>
+                {% if project.skills.all %}
+                <div class="project-card-skills">
+                    {% for skill in project.skills.all|slice:":4" %}
+                        <a href="?skill={{ skill.slug }}" class="skill-tag">{{ skill.name }}</a>
+                    {% endfor %}
+                    {% if project.skills.count > 4 %}
+                        <span class="skill-tag">+{{ project.skills.count|add:"-4" }}</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+                <div class="project-card-footer">
+                    <a href="{% url 'users:user_detail' username=project.author.username %}" class="project-card-author">
+                        {% if project.author.avatar %}
+                            <img src="{{ project.author.avatar.url }}" alt="" class="avatar avatar-sm">
+                        {% else %}
+                            <span class="avatar avatar-sm avatar-placeholder">{{ project.author.first_name|slice:":1" }}{{ project.author.last_name|slice:":1" }}</span>
+                        {% endif %}
+                        <span>{{ project.author.first_name }} {{ project.author.last_name }}</span>
+                    </a>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+
+        {% include 'includes/pagination.html' with page_obj=page_obj extra_query='&skill='|add:skill_param %}
+
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">∅</div>
+            <p class="empty-state-text">
+                {% if selected_skill or skill_param %}
+                    Проекты с этим навыком не найдены. <a href="{% url 'projects:project_list' %}">Сбросить фильтр</a>.
+                {% else %}
+                    Пока нет ни одного проекта.
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'projects:project_create' %}">Создайте первый</a>.
+                    {% endif %}
+                {% endif %}
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
